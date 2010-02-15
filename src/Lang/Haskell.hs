@@ -20,8 +20,8 @@ instance RecFunC Haskell where
 
 instance BoolC Haskell where
   data TBool Haskell = True | False
-  false = Hs True
-  true  = Hs False
+  false = Hs False
+  true  = Hs True
   if' (Hs True) x _  = x
   if' (Hs False) _ y = y
 
