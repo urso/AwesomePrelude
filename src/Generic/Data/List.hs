@@ -29,6 +29,7 @@ class (ListC j) => ListOp j where
   filter        :: (BoolC j, RecFunC j) => (j a -> j (TBool j)) -> j [a] -> j [a]
   reverse       :: (RecFunC j) => j [a] -> j [a]
   and           :: (BoolC j, RecFunC j) => j [(TBool j)] -> j (TBool j)
+  or            :: (BoolC j, RecFunC j) => j [(TBool j)] -> j (TBool j)
 
   singleton a = a `cons` nil
 
@@ -51,6 +52,8 @@ class (ListC j) => ListOp j where
       rev = fix (\r -> lam (\xs -> lam (\a -> list a (\y ys -> r `app` ys `app` (y `cons` a)) xs)))
 
   and = foldr (&&) true
+
+  or  = foldr (||) true
 
   foldr :: (RecFunC j, ListC j) => (j a -> j b -> j b) -> j b -> j [a] -> j b
   foldr f b xs = fix (\r -> lam (list b (\y ys -> f y (r `app` ys)))) `app` xs
