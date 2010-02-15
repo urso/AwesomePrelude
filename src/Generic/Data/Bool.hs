@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE EmptyDataDecls #-}
 
 module Generic.Data.Bool where
@@ -7,21 +8,21 @@ import Prelude ()
 infixr 3  &&
 infixr 2  ||
 
-data Bool
-class BoolC j where
-  false :: j Bool
-  true  :: j Bool
-  bool  :: j a -> j a -> j Bool -> j a
 
-if' :: BoolC j => j Bool -> j a -> j a -> j a
-if' b x y = bool y x b
+class BoolC l where
+  data TBool l
 
-(&&) :: BoolC j => j Bool -> j Bool -> j Bool
-x && y = bool false y x
+  true  :: l (TBool l)
+  false :: l (TBool l)
+  bool  :: l a -> l a -> l (TBool l) -> l a
+  if'   :: l (TBool l) -> l a -> l a -> l a
+  (&&)  :: l (TBool l) -> l (TBool l) -> l (TBool l)
+  (||)  :: l (TBool l) -> l (TBool l) -> l (TBool l)
+  not   :: l (TBool l) -> l (TBool l)
 
-(||) :: BoolC j => j Bool -> j Bool -> j Bool
-x || y = bool y true x
-
-not :: BoolC j => j Bool -> j Bool
-not = bool true false
+  bool x y b = if' b x y
+  if' b x y  = bool x y b
+  a && b     = if' a b false
+  a || b     = if' a true b
+  not        = bool true false
 

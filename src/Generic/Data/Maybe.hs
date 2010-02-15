@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE EmptyDataDecls, FlexibleInstances, MultiParamTypeClasses #-}
 
 module Generic.Data.Maybe where
@@ -11,28 +13,35 @@ import Generic.Control.Function
 import Generic.Control.Category
 import Generic.Control.Functor
 
-data Maybe a
-class MaybeC j where
-  nothing :: j (Maybe a)
-  just    :: j a -> j (Maybe a)
-  maybe   :: j r -> (j a -> j r) -> j (Maybe a) -> j r
 
-instance (BoolC j, FunC j, MaybeC j, Eq j a) => Eq j (Maybe a) where
-  mx == my = maybe (maybe true (const false) my)
+class MaybeC l where
+  data TMaybe l :: * -> *
+  nothing     :: l (TMaybe l a)
+  just        :: l a -> l (TMaybe l a)
+
+class (BoolC l, MaybeC l, FunC l) => MaybeOp l where
+  maybe     :: l r -> (l a -> l r) -> l (TMaybe l a) -> l r
+  isJust    :: l (TMaybe l a) -> l (TBool l)
+  isNothing :: l (TMaybe l a) -> l (TBool l)
+  fromMaybe :: l a -> l (TMaybe l a) -> l a
+
+  isJust      = maybe false (const true)
+  isNothing   = maybe true (const false)
+  fromMaybe d = maybe d (\a -> a) 
+
+instance (Eq l a, MaybeOp l) => Eq l (TMaybe l a) where
+  mx == my = maybe (isNothing my) 
                    (\x -> maybe false (\y -> x == y) my)
                    mx
 
-instance (BoolC j, FunC j, MaybeC j, Ord j a) => Ord j (Maybe a) where
-  mx <= my = maybe true -- (maybe true (const true) my)
-                   (\x -> maybe false (\y -> x <= y) my)
-                   mx
+instance (OrdC l a, MaybeOp l) => OrdC l (TMaybe l a) where
+  mx <= my = maybe true
+             (\x -> maybe false (\y -> x <= y) my)
+             mx
 
-instance (FunC j, MaybeC j) => Functor j Maybe where
+instance (MaybeOp l) => Functor l (TMaybe l) where
   fmap f = maybe nothing (just . f)
 
-fromMaybe :: MaybeC j => j a -> j (Maybe a) -> j a
-fromMaybe d m = maybe d (\a -> a) m
-
-catMaybes :: (RecFunC j, ListC j, MaybeC j) => j [Maybe a] -> j [a]
+catMaybes :: (RecFunC j, ListOp j, MaybeOp j) => j [TMaybe j a] -> j [a]
 catMaybes = foldr (\a b -> maybe nil singleton a ++ b) nil
 

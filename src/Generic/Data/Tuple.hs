@@ -14,7 +14,7 @@ class TupleC j where
 instance (BoolC j, TupleC j, Eq j a, Eq j b) => Eq j (a, b) where
   x == y = tuple (\xa xb -> tuple (\ya yb -> xa == ya && xb == yb) y) x
 
-instance (BoolC j, TupleC j, Eq j a, Eq j b, Ord j a, Ord j b) => Ord j (a, b) where
+instance (BoolC j, TupleC j, Eq j a, Eq j b, OrdC j a, OrdC j b) => OrdC j (a, b) where
   x <= y = tuple (\xa xb -> tuple (\ya yb -> xa <= ya && xb <= yb) y) x
 
 swap :: TupleC j => j (a, b) -> j (b, a)

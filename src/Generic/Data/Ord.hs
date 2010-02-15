@@ -1,22 +1,31 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE EmptyDataDecls, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 
 module Generic.Data.Ord where
 
-import Prelude ()
+import Prelude (($))
+import qualified Prelude as P
 import Generic.Data.Bool
 import Generic.Data.Eq
 
-infix  4  <, <=, >=, >
+-- infix  4  <, <=, >=, >
 
-class (Eq j a) => Ord j a where
-  compare              :: (BoolC j, OrderingC j) => j a -> j a -> j Ordering
-  (<), (<=), (>), (>=) :: (BoolC j, OrderingC j) => j a -> j a -> j Bool
-  max, min             :: (BoolC j, OrderingC j) => j a -> j a -> j a
 
-  compare x y = if' (x == y)
-                    eq
-                    (if' (x <= y) lt gt)
+class Ordering l where
+  data TOrdering l
+  lt :: l (TOrdering l)
+  gt :: l (TOrdering l)
+  eq :: l (TOrdering l)
+  ordering :: l a -> l a -> l a -> l (TOrdering l) -> l a
 
+class (Eq l a, Ordering l) => OrdC l a where
+  compare :: l a -> l a -> l (TOrdering l)
+  (<), (<=), (>), (>=) :: l a -> l a -> l (TBool l)
+  max, min             :: l a -> l a -> l a
+
+  compare x y = if' (x == y) eq $ if' (x <= y) lt gt
+  
   x <  y = ordering true  false false (compare x y)
   x <= y = ordering true  true  false (compare x y)
   x >  y = ordering false false true  (compare x y)
@@ -25,31 +34,22 @@ class (Eq j a) => Ord j a where
   max x y = if' (x <= y) y x
   min x y = if' (x <= y) x y
 
-data Ordering
-class OrderingC j where
-  lt       :: j Ordering
-  eq       :: j Ordering
-  gt       :: j Ordering
-  ordering :: j a -> j a -> j a -> j Ordering -> j a
+instance (Ordering l, BoolC l) => OrdC l (TBool l) where
+  x <= y = if' x true (if' y false true)
 
-instance (BoolC j) => Ord j Bool where
-  x <= y = bool true -- (bool true true y)
-                (bool false true y)
-                x
-
-instance (BoolC j, OrderingC j) => Eq j Ordering where
+instance (Ordering l, BoolC l) => Eq l (TOrdering l) where
   x == y = ordering (ordering true  false false y)
                     (ordering false true  false y)
                     (ordering false false true  y)
                     x
 
-instance (BoolC j, OrderingC j) => Ord j Ordering where
+instance (Ordering l, BoolC l) => OrdC l (TOrdering l) where
   x <= y = ordering true -- (ordering true  true  true y)
                     (ordering false true  true y)
                     (ordering false false true y)
                     x
 
-comparing :: (Ord j a, BoolC j, OrderingC j)
-          => (b -> j a) -> b -> b -> j Ordering
+comparing :: (OrdC l a, BoolC l, Ordering l) => 
+             (b -> l a) -> b -> b -> l (TOrdering l)
 comparing p x y = compare (p x) (p y)
 

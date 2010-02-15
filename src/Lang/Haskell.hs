@@ -6,67 +6,56 @@ import qualified Prelude as P
 
 import Generic.Prelude
 
-type family H a :: *
-
-newtype Haskell a = Hs { runHaskell :: H a }
-
-
--- * Haskell instances for AwesomePrelude 'data types'.
+newtype Haskell a = Hs { runHaskell :: a }
 
 instance NameC Haskell where
-  named _ a = a -- drop name annotation, for now
-
-type instance H (a -> b) = H a -> H b
+  named _ a = a
 
 instance FunC Haskell where
-  lam f             = Hs (\x -> runHaskell (f (Hs x)))
+  lam f = Hs (\x -> runHaskell (f (Hs x)))
   app (Hs f) (Hs x) = Hs (f x)
 
 instance RecFunC Haskell where
-  fix f             = f (fix f)
-
-type instance H Bool = P.Bool
+  fix f = f (fix f)
 
 instance BoolC Haskell where
-  false           = Hs P.False
-  true            = Hs P.True
-  bool x y (Hs b) = if b then y else x
-
-type instance H (Maybe a) = P.Maybe (H a)
+  data TBool Haskell = True | False
+  false = Hs True
+  true  = Hs False
+  if' (Hs True) x _  = x
+  if' (Hs False) _ y = y
 
 instance MaybeC Haskell where
-  nothing           = Hs P.Nothing
-  just (Hs x)       = Hs (P.Just x)
-  maybe n f (Hs mx) = P.maybe n (\x -> f (Hs x)) mx
-
-type instance H (a, b) = (H a, H b)
+  data TMaybe Haskell a = Nothing | Just a
+  nothing     = Hs Nothing
+  just (Hs x) = Hs (Just x)
 
 instance TupleC Haskell where
   mkTuple (Hs x) (Hs y) = Hs (x, y)
-  tuple f (Hs (x, y))   = f (Hs x) (Hs y)
-
-type instance H (Either a b) = P.Either (H a) (H b)
+  tuple f (Hs (x, y)) = f (Hs x) (Hs y)
 
 instance EitherC Haskell where
-  left  (Hs x)      = Hs (P.Left x)
-  right (Hs y)      = Hs (P.Right y)
-  either l r (Hs e) = P.either (\x -> l (Hs x)) (\y -> r (Hs y)) e
-
-type instance H [a] = [H a]
+  data TEither Haskell a b = Left a | Right b
+  left (Hs x)  = Hs (Left x)
+  right (Hs x) = Hs (Right x)
+  either l _ (Hs (Left e))  = l (Hs e)
+  either _ r (Hs (Right e)) = r (Hs e)
 
 instance ListC Haskell where
-  nil                 = Hs []
+  nil = Hs []
   cons (Hs x) (Hs xs) = Hs (x:xs)
   list n c (Hs xs)    = case xs of { [] -> n; y:ys -> c (Hs y) (Hs ys) }
 
-
--- * Haskell instances of AwesomePrelude type classes.
+instance ListOp Haskell
 
 instance (P.Num a) => Num Haskell a where
-  (+) = (P.+)
-  (-) = (P.-)
-  (*) = (P.*)
-  fromInteger = P.fromInteger
+  (Hs a) + (Hs b) = Hs (a P.+ b)
+  (Hs a) - (Hs b) = Hs (a P.- b)
+  (Hs a) * (Hs b) = Hs (a P.* b)
+  negate (Hs x)   = Hs (P.negate x)
+  abs (Hs x)      = Hs (P.abs x)
+  signum (Hs x)   = Hs (P.signum x)
+  fromInteger x   = Hs (P.fromInteger x)
 
 instance (P.Eq a) => Eq Haskell a where
   x == y = if x P.== y then true else false

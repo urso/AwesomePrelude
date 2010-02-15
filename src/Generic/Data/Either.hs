@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE EmptyDataDecls, FlexibleInstances, MultiParamTypeClasses #-}
 
 module Generic.Data.Either where
@@ -8,18 +9,19 @@ import Generic.Data.Eq
 import Generic.Data.Ord
 import Generic.Control.Function
 
-data Either a b
-class EitherC j where
-  left   :: j a -> j (Either a b)
-  right  :: j b -> j (Either a b)
-  either :: (j a -> j r) -> (j b -> j r) -> j (Either a b) -> j r
 
-instance (BoolC j, FunC j, EitherC j, Eq j a, Eq j b) => Eq j (Either a b) where
+class EitherC l where
+  data TEither l :: * -> * -> *
+  left   :: l a -> l (TEither l a b)
+  right  :: l b -> l (TEither l a b)
+  either :: (l a -> l r) -> (l b -> l r) -> l (TEither l a b) -> l r
+
+instance (EitherC l, BoolC l, Eq l a, Eq l b, FunC l) => Eq l (TEither l a b) where
   ex == ey = either (\x -> either (\y -> x == y) (const false) ey)
                     (\x -> either (const false) (\y -> x == y) ey)
                     ex
 
-instance (BoolC j, FunC j, EitherC j, Ord j a, Ord j b) => Ord j (Either a b) where
+instance (EitherC l, BoolC l, OrdC l a, OrdC l b, FunC l) => OrdC l (TEither l a b) where
   ex <= ey = either (\x -> either (\y -> x <= y) (const true) ey)
                     (\x -> either (const false) (\y -> x <= y) ey)
                     ex
