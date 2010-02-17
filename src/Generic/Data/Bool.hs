@@ -24,5 +24,5 @@ class BoolC l where
   if' b x y  = bool x y b
   a && b     = if' a b false
   a || b     = if' a true b
-  not        = bool true false
+  not        = bool false true
 
