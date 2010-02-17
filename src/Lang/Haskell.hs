@@ -26,11 +26,12 @@ type Either a b = TEither Haskell a b
 instance NameC Haskell where
   named _ a = a
 
-instance FunC Haskell where
-  lam f = Hs (\x -> unPack (f (Hs x)))
-    where unPack (Hs x) = x
+data HsFun a b = HsFun (Haskell a -> Haskell b)
 
-  app (Hs f) (Hs x) = Hs (f x)
+instance FunC Haskell where
+  type TFun Haskell = HsFun
+  lam f = Hs (HsFun f)
+  app (Hs (HsFun f)) = f
 
 instance RecFunC Haskell where
   fix f = f (fix f)
