@@ -56,12 +56,13 @@ class Num l a where
 
 -- Terrible hack to get number literals working.
 
-instance Prelude.Show (j a) where show _ = "num"
-instance Prelude.Eq   (j a) where
--- instance Num j a => Prelude.Num  (j a) where
---   (+)    = Prelude.undefined
---   (*)    = Prelude.undefined
---   abs    = Prelude.undefined
---   signum = Prelude.undefined
---   fromInteger = fromInteger
+instance (Prelude.Num a) => Prelude.Show (l (TNum l a)) where show _ = "num"
+instance (Prelude.Num a) => Prelude.Eq   (l (TNum l a)) where
+
+instance (Num l a, Prelude.Eq (l (TNum l a)), Prelude.Show (l (TNum l a))) => Prelude.Num (l (TNum l a)) where
+  (+)    = Prelude.undefined
+  (*)    = Prelude.undefined
+  abs    = Prelude.undefined
+  signum = Prelude.undefined
+  fromInteger = fromInteger
 
