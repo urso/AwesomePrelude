@@ -44,6 +44,7 @@ instance MaybeOp (Val JS) where
   maybe p q = fun3 "maybe" (\[n, j, m] -> m ++ ".nothing ? " ++ n ++ " : " ++ j ++ "(" ++ m ++ ".just)") p (lam q)
 
 instance TupleC (Val JS) where
+  data TTuple (Val JS) a b
   mkTuple   = fun2 "mkTuple" (\[a, b] -> "{ fst : " ++ a ++ ", snd : " ++ b ++ "}")
   tuple p q = fun2 "tuple"   (\[f, t] -> f ++ "(" ++ t ++ ".fst, " ++ t ++ ".snd)") (lam2 p) q
 
@@ -64,6 +65,7 @@ instance ListC (Val JS) where
 data Number
 
 instance Num (Val JS) Number where
+  data TNum (Val JS) Number
   negate x = lam (\(Var v) -> Prim (\[x] -> "(-(" ++ x ++ "))") [v]) `app` x
   abs = fun1 "abs" (\[a] -> "Math.abs(" ++ a ++ ")")
   signum = fun1 "signum" (\[a] -> "Math.signum(" ++ a ++ ")")
