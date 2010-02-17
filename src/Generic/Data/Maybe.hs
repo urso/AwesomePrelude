@@ -40,7 +40,7 @@ instance (OrdC l a, MaybeOp l) => OrdC l (TMaybe l a) where
              mx
 
 instance (MaybeOp l) => Functor l (TMaybe l) where
-  fmap f = maybe nothing (just . f)
+  fmap f = maybe nothing (\a -> lam just `app` (lam f `app` a))
 
 catMaybes :: (RecFunC j, ListOp j, MaybeOp j) => j [TMaybe j a] -> j [a]
 catMaybes = foldr (\a b -> maybe nil singleton a ++ b) nil
