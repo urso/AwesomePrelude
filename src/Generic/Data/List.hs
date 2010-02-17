@@ -11,9 +11,6 @@ import Generic.Data.Ord
 import Generic.Control.Function
 import Generic.Control.Functor
 
--- data List a
--- instead of `List a`, use `[a]`
-
 class ListC j where
   nil  :: j [a]
   cons :: j a -> j [a] -> j [a]
@@ -22,10 +19,10 @@ class ListC j where
 class (ListC j) => ListOp j where
   singleton     :: j a -> j [a]
   map           :: (RecFunC j) => (j a -> j b) -> j [a] -> j [b]
-  replicate     :: (Num j a, Eq j a, RecFunC j) => j a -> j b -> j [b]
+  replicate     :: (Num j a, Eq j (TNum j a), RecFunC j) => j (TNum j a) -> j b -> j [b]
   (++)          :: (RecFunC j) => j [a] -> j [a] -> j [a]
-  genericLength :: (RecFunC j, Num j a) => j [b] -> j a
-  sum           :: (RecFunC j, Num j a) => j [a] -> j a
+  genericLength :: (RecFunC j, Num j a) => j [b] -> j (TNum j a)
+  sum           :: (RecFunC j, Num j a) => j [(TNum j a)] -> j (TNum j a)
   filter        :: (BoolC j, RecFunC j) => (j a -> j (TBool j)) -> j [a] -> j [a]
   reverse       :: (RecFunC j) => j [a] -> j [a]
   and           :: (BoolC j, RecFunC j) => j [(TBool j)] -> j (TBool j)
